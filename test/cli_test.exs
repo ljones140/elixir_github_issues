@@ -4,7 +4,7 @@ defmodule CliTest do
 
   import Issues.CLI, only: [ parse_args: 1,
                              sort_into_ascending_order: 1,
-                             convert_to_list_of_maps: 1]
+                             convert_to_list_of_maps: 1 ]
 
   test ":help returned by option parsing with option -h and --help options" do
     assert parse_args(["-h", "anything"]) == :help
