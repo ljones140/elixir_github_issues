@@ -2,22 +2,17 @@ defmodule Issues.TableFormatter do
   @date_length 20
 
   def format(data) do
-    id_length = longest_id_length(data, "id")
-    title_length = longest_title_length(data, "title")
+    id_length = longest_element_length(data, "id")
+    title_length = longest_element_length(data, "title")
     header = create_header(id_length, title_length)
     top_line = create_top_line(id_length, title_length)
     body = create_body(data, id_length, title_length)
     "#{header}#{top_line}#{body}"
   end
 
-  defp longest_title_length(data, field) do
-    Enum.max_by(data, &String.length(&1[field]))[field]
-    |> String.length
-  end
-
-  defp longest_id_length(data, field) do
-    Enum.max_by(data, &(String.length(Integer.to_string(&1[field]))))[field]
-    |> Integer.to_string
+  defp longest_element_length(data, field) do
+    Enum.max_by(data, &(String.length(to_string(&1[field]))))[field]
+    |> to_string
     |> String.length
   end
 
