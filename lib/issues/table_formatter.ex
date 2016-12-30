@@ -1,32 +1,47 @@
 defmodule Issues.TableFormatter do
-  @date_length 20
 
-  def format(data) do
-    id_length = longest_by_field_length(data, "id")
-    title_length = longest_by_field_length(data, "title")
-    header = create_header(id_length, title_length)
-    top_line = create_top_line(id_length, title_length)
-    body = create_body(data, id_length, title_length)
-    "#{header}#{top_line}#{body}"
+  import Enum, only: [ each: 2, map: 2, map_join: 3, max: 1 ]
+
+  def print_table_for_columns(rows, headers) do
+    with data_by_columns = split_into_columns(rows, headers),
+         column_widths   = widths_of(data_by_columns),
+         format          = format_for(column_widths)
+    do
+         puts_one_line_in_columns(headers, format)
+         IO.puts(seperator(column_widths))
+         puts_in_columns(data_by_columns, format)
+    end
   end
 
-  defp longest_by_field_length(data, field) do
-    Enum.max_by(data, &(String.length(to_string(&1[field]))))[field]
-    |> to_string
-    |> String.length
+  def split_into_columns(rows, headers) do
+    for header <- headers do
+      for row <- rows, do: printable(row[header])
+    end
   end
 
-  defp create_header(id_length, title_length) do
-    "#{String.pad_trailing("#", id_length)} | #{String.pad_trailing("created_at", @date_length)} | #{String.pad_trailing("title", title_length)}\n"
+  def printable(str) when is_binary(str), do: str
+  def printable(str), do: to_string(str)
+
+  def widths_of(columns) do
+    for column <- columns, do: column |> map(&String.length/1) |> max
   end
 
-  defp create_top_line(id_length, title_length) do
-    "#{String.duplicate("-", id_length)}-+-#{String.duplicate("-", @date_length)}-+-#{String.duplicate("-", title_length)}\n"
+  def format_for(column_widths) do
+    map_join(column_widths, " | ", fn width -> "~-#{width}s" end) <> "~n"
   end
 
-  defp create_body(data, id_length, title_length) do
-    Enum.map(data, fn(issue) ->
-      "#{String.pad_trailing(to_string(issue["id"]), id_length)} | #{String.pad_trailing(issue["created_at"], @date_length)} | #{String.pad_trailing(issue["title"], title_length)}\n"
-    end)
+  def seperator(column_widths) do
+    map_join(column_widths, "-+-", fn width -> List.duplicate("-", width) end)
+  end
+
+  def puts_in_columns(data_by_columns, format) do
+    data_by_columns
+    |> List.zip
+    |> map(&Tuple.to_list/1)
+    |> each(&puts_one_line_in_columns(&1, format))
+  end
+
+  def puts_one_line_in_columns(fields, format) do
+    :io.format(format, fields)
   end
 end
